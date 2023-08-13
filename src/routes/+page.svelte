@@ -1,5 +1,6 @@
 <script>
   //import { OPENWEATHERMAP_KEY } from "$env/static/private";
+  import { getCurrentPosition } from './getCurrentPosition';
 
   let location = '';
   const weatherData = {
@@ -7,6 +8,11 @@
     successful: null,
     /** @type {import('./$types').Failed} */
     failed: null
+  };
+
+  const geolocationError = {
+    code: 0,
+    message: ''
   };
 
   async function fetchCurrentWeather() {
@@ -35,35 +41,31 @@
   }
 
   async function fetchWeatherByCurrentPosition() {
-    let currentPosition;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        currentPosition = pos;
-        alert(`Your position is: ${pos}`);
-      },
-      (e) => alert(e)
-    );
-    console.log(currentPosition);
-
-    const weatherToken = 'token';
-    const url = 'https://api.openweathermap.org/data/2.5/weather';
-    const api = `${url}?q=${location}&appid=${weatherToken}`;
-
     try {
-      const promise = await fetch(api);
-      const json = await promise.json();
+      const currentPosition = await getCurrentPosition();
+      if ('coords' in currentPosition) {
+        const weatherToken = 'token';
+        const url = 'https://api.openweathermap.org/data/2.5/weather';
+        const api = `${url}?lat=${currentPosition?.coords.latitude}&lon=${currentPosition?.coords.longitude}&appid=${weatherToken}`;
 
-      switch (promise.ok) {
-        case true:
+        const promise = await fetch(api);
+        const json = await promise.json();
+
+        if (promise.ok) {
           weatherData.successful = json;
           weatherData.failed = null;
-          break;
-        case false:
+        } else {
           weatherData.failed = json;
           weatherData.successful = null;
-          break;
+        }
       }
     } catch (e) {
+      const geoError = /** @type {GeolocationPositionError}*/ (e);
+
+      if (geoError?.code !== 0) {
+        geolocationError.code = geoError.code;
+        geolocationError.message = geoError.message;
+      }
       console.error(e);
     }
   }
@@ -95,6 +97,9 @@
 {#if weatherData.successful}
   {weatherData.successful.weather[0].description}
 {:else if weatherData.failed}
-  Cod: {weatherData.failed.cod}
+  Code: {weatherData.failed.cod}
   Message: {weatherData.failed.message}
+{:else if geolocationError.code}
+  <p>Geolocation error code: {geolocationError.code}</p>
+  <p>Message: {geolocationError.message}</p>
 {/if}
