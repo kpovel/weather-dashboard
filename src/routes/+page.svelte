@@ -2,8 +2,12 @@
   //import { OPENWEATHERMAP_KEY } from "$env/static/private";
 
   let location = '';
-  /** @type {import('./$types').WeatherData} */
-  let weatherData;
+  const weatherData = {
+    /** @type {import('./$types').Successful} */
+    successful: null,
+    /** @type {import('./$types').Failed} */
+    failed: null
+  };
 
   async function fetchCurrentWeather() {
     // todo: get a weather token fron env using sveltekit
@@ -11,10 +15,23 @@
     const url = 'https://api.openweathermap.org/data/2.5/weather';
     const api = `${url}?q=${location}&appid=${weatherToken}`;
 
-    const promise = await fetch(api);
-    const json = await promise.json();
-    console.log(json);
-    weatherData = json;
+    try {
+      const promise = await fetch(api);
+      const json = await promise.json();
+
+      switch (promise.ok) {
+        case true:
+          weatherData.successful = json;
+          weatherData.failed = null;
+          break;
+        case false:
+          weatherData.failed = json;
+          weatherData.successful = null;
+          break;
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 </script>
 
@@ -38,6 +55,9 @@
   </label>
 </form>
 
-{#if weatherData}
-  {weatherData.weather[0].main}
+{#if weatherData.successful}
+  {weatherData.successful.weather[0].description}
+{:else if weatherData.failed}
+  Cod: {weatherData.failed.cod}
+  Message: {weatherData.failed.message}
 {/if}
