@@ -33,6 +33,40 @@
       console.error(e);
     }
   }
+
+  async function fetchWeatherByCurrentPosition() {
+    let currentPosition;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        currentPosition = pos;
+        alert(`Your position is: ${pos}`);
+      },
+      (e) => alert(e)
+    );
+    console.log(currentPosition);
+
+    const weatherToken = 'token';
+    const url = 'https://api.openweathermap.org/data/2.5/weather';
+    const api = `${url}?q=${location}&appid=${weatherToken}`;
+
+    try {
+      const promise = await fetch(api);
+      const json = await promise.json();
+
+      switch (promise.ok) {
+        case true:
+          weatherData.successful = json;
+          weatherData.failed = null;
+          break;
+        case false:
+          weatherData.failed = json;
+          weatherData.successful = null;
+          break;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 </script>
 
 <form
@@ -52,6 +86,9 @@
       placeholder="Enter a city name"
     />
     <button type="submit">Find current weather</button>
+    <button on:click|preventDefault={fetchWeatherByCurrentPosition}
+      >Find weather by current position</button
+    >
   </label>
 </form>
 
