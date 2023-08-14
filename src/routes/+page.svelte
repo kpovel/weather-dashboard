@@ -12,11 +12,6 @@
     failed: null
   };
 
-  const geolocationError = {
-    code: 0,
-    message: ''
-  };
-
   async function fetchCurrentWeather() {
     // todo: get a weather token fron env using sveltekit
     const weatherToken = 'token';
@@ -65,8 +60,11 @@
       const geoError = /** @type {GeolocationPositionError}*/ (e);
 
       if (geoError?.code !== 0) {
-        geolocationError.code = geoError.code;
-        geolocationError.message = geoError.message;
+        weatherData.successful = null;
+        weatherData.failed = {
+          cod: geoError.code.toString(),
+          message: geoError.message
+        };
       }
       console.error(e);
     }
@@ -81,12 +79,10 @@
   action="submit"
 >
   <label class="mx-auto flex w-[90vw] flex-col gap-2 text-sm font-semibold text-gray-900">
-    <span class="mt-2 text-xl">
-      Weather to search:
-    </span>
+    <span class="mt-2 text-xl"> Weather to search: </span>
     <input
       bind:value={location}
-      class="w-full rounded-md required:border-red-500 ring-1 ring-inset ring-gray-300 bg-white px-3 py-2 placeholder-slate-500 shadow-sm focus:outline-none focus:ring-gray-400"
+      class="w-full rounded-md bg-white px-3 py-2 placeholder-slate-500 shadow-sm ring-1 ring-inset ring-gray-300 required:border-red-500 focus:outline-none focus:ring-gray-400"
       placeholder="Enter a location"
     />
     <button
@@ -109,9 +105,6 @@
 {#if weatherData.successful}
   {weatherData.successful.weather[0].description}
 {:else if weatherData.failed}
-  Code: {weatherData.failed.cod}
+  Error code: {weatherData.failed.cod}
   Message: {weatherData.failed.message}
-{:else if geolocationError.code}
-  <p>Geolocation error code: {geolocationError.code}</p>
-  <p>Message: {geolocationError.message}</p>
 {/if}
