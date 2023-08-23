@@ -8,6 +8,7 @@
   export let form;
 
   let location = '';
+  let loading = false;
   const weatherData = {
     /** @type {import('./weatherType').Successful} */
     successful: null,
@@ -49,7 +50,18 @@
   }
 </script>
 
-<form method="POST" action="?/currentWeather" use:enhance>
+<form
+  method="POST"
+  action="?/currentWeather"
+  use:enhance={() => {
+    loading = true;
+
+    return async ({ update }) => {
+      await update();
+      loading = false;
+    };
+  }}
+>
   <label class="mx-auto flex w-[90vw] flex-col gap-2 text-sm font-semibold text-gray-900">
     <span class="mt-2 text-xl"> Weather to search: </span>
     <input
@@ -75,6 +87,10 @@
     </button>
   </label>
 </form>
+
+{#if loading}
+  Loading...
+{/if}
 
 {#if weatherData.successful}
   {weatherData.successful.weather[0].description}
