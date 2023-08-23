@@ -17,14 +17,23 @@
   };
 
   async function fetchWeatherByCurrentPosition() {
+    loading = true;
+    weatherData.successful = null;
+    weatherData.failed = null;
+
     try {
       const currentPosition = await getCurrentPosition();
       if ('coords' in currentPosition) {
-        const weatherToken = 'token';
-        const url = 'https://api.openweathermap.org/data/2.5/weather';
-        const api = `${url}?lat=${currentPosition?.coords.latitude}&lon=${currentPosition?.coords.longitude}&appid=${weatherToken}`;
-
-        const promise = await fetch(api);
+        const promise = await fetch('/weather', {
+          method: 'POST',
+          body: JSON.stringify({
+            longitude: currentPosition.coords.longitude,
+            latitude: currentPosition.coords.latitude
+          }),
+          headers: {
+            'content-type': 'application/json'
+          }
+        });
         const json = await promise.json();
 
         if (promise.ok) {
@@ -47,6 +56,8 @@
       }
       console.error(e);
     }
+
+    loading = false;
   }
 </script>
 
@@ -55,6 +66,8 @@
   action="?/currentWeather"
   use:enhance={() => {
     loading = true;
+    weatherData.successful = null;
+    weatherData.failed = null;
 
     return async ({ update }) => {
       await update();
@@ -93,7 +106,9 @@
 {/if}
 
 {#if weatherData.successful}
-  {weatherData.successful.weather[0].description}
+  Weather from api call: {weatherData.successful.weather[0].description}
+{:else if form?.successful}
+  Weather from form: {form?.successful.weather[0].description}
 {:else if weatherData.failed}
   Error code: {weatherData.failed.cod}
   Message: {weatherData.failed.message}
