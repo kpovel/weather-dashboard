@@ -7,7 +7,6 @@
   /** @type {import('./$types').ActionData} */
   export let form;
 
-  let location = '';
   let loading = false;
   const weatherData = {
     /** @type {import('./weatherType').Successful} */
@@ -78,7 +77,6 @@
   <label class="mx-auto flex w-[90vw] flex-col gap-2 text-sm font-semibold text-gray-900">
     <span class="mt-2 text-xl"> Weather to search: </span>
     <input
-      bind:value={location}
       class="w-full rounded-md bg-white px-3 py-2 placeholder-slate-500 shadow-sm ring-1 ring-inset ring-gray-300 required:border-red-500 focus:outline-none focus:ring-gray-400"
       placeholder="Enter a location"
       name="location"
